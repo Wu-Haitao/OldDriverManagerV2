@@ -1,0 +1,67 @@
+﻿<MudThemeProvider Theme="MyCustomTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Dense=true>
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="@_drawerOpen" Variant="DrawerVariant.Persistent" Color="Color.Primary">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">安全驾驶</MudText>
+        </MudDrawerHeader>
+        <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.SpaceDashboard" OnClick="@((e) => OpenPage(Page.Library))">库</MudNavLink>
+        <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Settings" OnClick="@((e) => OpenPage(Page.Setting))">设置</MudNavLink>
+        <MudSpacer />
+        <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Info" OnClick="@((e) => OpenPage(Page.Credit))">关于</MudNavLink>
+    </MudDrawer>
+    @switch (current_page)
+    {
+        case Page.Library:
+            <Library />
+            break;
+        case Page.Setting:
+            <Setting />
+            break;
+        case Page.Credit:
+            <Credit />
+            break;
+        default:
+            break;
+    }
+</MudLayout>
+
+@code {
+    enum Page
+    {
+        Library,
+        Setting,
+        Credit
+    }
+
+    Page current_page = Page.Library;
+
+    bool _drawerOpen = false;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    void OpenPage(Page new_page)
+    {
+        _drawerOpen = false;
+        current_page = new_page;
+    }
+
+
+    MudTheme MyCustomTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Primary = Colors.Grey.Darken3,
+            Secondary = Colors.Grey.Darken2,
+            AppbarBackground = Colors.Shades.White
+        }
+    };
+}

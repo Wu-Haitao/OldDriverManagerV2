@@ -1,0 +1,128 @@
+﻿<MudContainer Class="py-8" MaxWidth="MaxWidth.Small">
+    @if (img_urls.Count > 0)
+    {
+        <MudPaper Class="mt-4" Elevation="3">
+            <MudCarousel Class="mud-width-full rounded" TData="object" Style="height:400px" ShowArrows=false>
+            @foreach (string img_url in img_urls)
+            {
+                <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
+                        <MudImage Fluid="true" Src="@img_url" ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Style="@(Settings.Default.IsImgBlured? "filter:blur(12px);width:100%; height:100%;":"width:100%; height:100%;")" />
+                </MudCarouselItem>
+            }
+        </MudCarousel>
+        </MudPaper>
+    }
+    <MudPaper Class="pa-8 mt-4" Elevation="3">
+        @if (movie != null)
+        {
+            <MudText Typo="Typo.h6">@movie.title</MudText>
+            <MudDivider Class="my-4"/>
+            <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Numbers" Size="Size.Small" /> @movie.num</MudText>
+            <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Sell" Size="Size.Small" /> @movie.seller</MudText>
+            <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" /> <MudLink Href="@movie.website">链接</MudLink></MudText>
+            @if (movie.tags.Count > 0)
+            {
+                <MudDivider Class="my-4" />
+                @foreach (string _tag in movie.tags)
+                {
+                    <MudChip Variant="Variant.Text" Color="Color.Primary" OnClick="@((e)=>OnCopyClicked(_tag))">@_tag</MudChip>
+                }
+            }
+            <MudDivider Class="my-4" />
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie.file))">播放</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFileMove" OnClick="@((e)=>OnOpenPathClicked(movie.file))">打开文件所在路径</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EditNote" OnClick="@((e)=>OpOpenNFOClicked(movie.nfo))">编辑属性文件</MudButton>
+        }
+    </MudPaper>
+
+</MudContainer>
+
+@using WpfBlazor.Util
+@inject ISnackbar Snackbar
+
+@code {
+    WpfBlazor.Data.Movie? _movie;
+    [Parameter]
+    public WpfBlazor.Data.Movie? movie { set; get; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (movie == _movie) return;
+        else _movie = movie;
+
+        await RefreshPage();
+    }
+
+    protected override void OnInitialized()
+    {
+        Init();
+    }
+
+    private void Init()
+    {
+        System.Diagnostics.Debug.WriteLine("Movie init!");
+        InitSnackbar();
+    }
+
+    private void InitSnackbar()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        Snackbar.Configuration.ShowTransitionDuration = 200;
+        Snackbar.Configuration.HideTransitionDuration = 200;
+        Snackbar.Configuration.VisibleStateDuration = 800;
+        Snackbar.Configuration.SnackbarVariant = Variant.Text;
+        Snackbar.Configuration.PreventDuplicates = true;
+    }
+
+    private void OnCopyClicked(string tag)
+    {
+        try
+        {
+            System.Windows.Clipboard.SetText(tag);
+            Snackbar.Add("标签内容已复制", Severity.Success, config => { config.HideIcon = true; });
+        }
+        catch
+        {
+            Snackbar.Add("请勿重复点击！", Severity.Error, config => { config.HideIcon = true; });
+        }
+    }
+
+    private void OnPlayClicked(string path)
+    {
+        bool flag = FileHelper.PlayMovie(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    private void OnOpenPathClicked(string path)
+    {
+        bool flag = FileHelper.OpenPathOfMovie(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    private void OpOpenNFOClicked(string path)
+    {
+        bool flag = FileHelper.OpenNFO(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    private async Task RefreshPage()
+    {
+        System.Diagnostics.Debug.WriteLine("Movie refresh!");
+        await LoadLocalImage();
+        StateHasChanged();
+    }
+
+    private List<string> img_urls = new();
+    private async Task LoadLocalImage()
+    {
+        if (movie == null) return;
+        List<string> img_paths = await FileHelper.GetAllImgOfMovie(movie);
+        img_urls.Clear();
+        await LocalImageLoader.RevokeAll(1);
+        if (img_paths.Count == 0) img_urls.Add(await LocalImageLoader.GenerateImgUrl(movie.cover, 1));
+        foreach (string img_path in img_paths)
+        {
+            img_urls.Add(await LocalImageLoader.GenerateImgUrl(img_path, 1));
+        }
+    }
+}

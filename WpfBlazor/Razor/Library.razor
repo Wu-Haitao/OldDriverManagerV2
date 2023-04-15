@@ -1,0 +1,221 @@
+﻿<MudMainContent>
+    @if (!show_movie_info)
+    {
+        <div class="d-flex flex-column align-center mx-8 py-4">
+            <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex d-row align-center">
+                <MudTextField T="string" Value="@search_text" DebounceInterval="250" OnDebounceIntervalElapsed="OnDebounceIntervalElapsed" Label="Search" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true" />
+                @if (Settings.Default.SortFlag == 1) {
+                    <MudFab Class="ml-8" Size="Size.Medium" DisableElevation="true" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@((e)=>OnRefreshClicked())" />
+                }
+
+            </MudContainer>
+            @switch (Settings.Default.SortFlag)
+            {
+                case 0:
+                    <MudGrid Justify="Justify.Center" Class="py-8">
+                    @for (int _i = 0; _i < num_items; _i++)
+                {
+                    int _index = _i;
+                    <MudItem>
+                        <MudCard Style="width:160px" Elevation="3">
+                            @if (cover_img_urls != null)
+                            {
+                                <MudCardMedia Style="@(Settings.Default.IsImgBlured? "filter:blur(12px)":"")" Image="@cover_img_urls[_index]" Height="120" />
+                            }
+                            @if (titles != null)
+                            {
+                                <MudCardContent>
+                                    <MudText Style="text-overflow: ellipsis;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 3;overflow: hidden;" Typo="Typo.body1">@titles[_index]</MudText>
+                                </MudCardContent>
+                            }
+                            <MudCardActions>
+                                <MudTooltip Text="播放">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(_index))" />
+                                </MudTooltip>
+                                <MudSpacer />
+                                <MudTooltip Text="详情">
+                                    <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" OnClick="@((e)=>OnInfoClicked(_index))" />
+                                </MudTooltip>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+
+                    </MudGrid>
+                    <MudPagination Selected="current_page" Class="py-4" Count="num_page" SelectedChanged="OnPageChanged" />
+                    break;
+                case 1:
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            @if (FileHelper.movies.Count > 0)
+                            {
+                                <Movie movie="@movie_main" />
+                            }
+                        </MudItem>
+                        @if (num_items > 1)
+                        {
+                            <MudItem xs="12" sm="6">
+                                <MudGrid Justify="Justify.SpaceEvenly" Class="pt-12">
+                                    @for (int _i = 1; _i < Math.Min(13, num_items); _i++)
+                                    {
+                                        int _index = _i; 
+                                        <MudItem>
+                                            <MudCard Style="width:160px" Elevation="3">
+                                                @if (cover_img_urls != null)
+                                                {
+                                                    <MudCardMedia Style="@(Settings.Default.IsImgBlured? "filter:blur(12px)":"")" Image="@cover_img_urls[_index]" Height="120" />
+                                                }
+                                                <MudCardActions>
+                                                    <MudTooltip Text="播放">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(_index))" />
+                                                    </MudTooltip>
+                                                    <MudSpacer />
+                                                    <MudTooltip Text="详情">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" OnClick="@((e)=>OnInfoClicked(_index))" />
+                                                    </MudTooltip>
+                                                </MudCardActions>
+                                            </MudCard>
+                                        </MudItem>
+                                    }
+
+                                </MudGrid>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    break;
+            }
+        </div>
+    }
+    else
+    {
+        <div class="fixed pl-4 pt-4 z-100">
+            <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@((e)=>OnBackClicked())" />
+        </div>
+        <Movie movie="@movie_open" />
+    }
+</MudMainContent>
+
+@using WpfBlazor.Util
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+@code {
+    bool show_movie_info = false;
+    int num_page = 1;
+    int current_page = 1;
+    int num_items = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Init();
+        await RefreshPage();
+    }
+
+    private void InitSnackbar()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        Snackbar.Configuration.ShowTransitionDuration = 200;
+        Snackbar.Configuration.HideTransitionDuration = 200;
+        Snackbar.Configuration.VisibleStateDuration = 800;
+        Snackbar.Configuration.SnackbarVariant = Variant.Text;
+        Snackbar.Configuration.PreventDuplicates = true;
+    }
+
+    string search_text = "";
+    private async Task OnDebounceIntervalElapsed(string debouncedText)
+    {
+        search_text = debouncedText;
+        current_page = 1;
+        await FileHelper.FilterMovies(debouncedText);
+        await FileHelper.SortMovies();
+        await RefreshPage();
+    }
+
+    private async Task OnPageChanged(int i)
+    {
+        current_page = i;
+        await RefreshPage();
+        await JSRuntime.InvokeVoidAsync("scrollToTop");
+    }
+
+    private async Task OnRefreshClicked()
+    {
+        await FileHelper.SortMovies();
+        await RefreshPage();
+    }
+
+    private void OnPlayClicked(int i)
+    {
+        int index = (current_page - 1) * Settings.Default.NumOfItems + i;
+        bool flag = FileHelper.PlayMovie(index);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    WpfBlazor.Data.Movie? movie_open;
+    private async Task OnInfoClicked(int i)
+    {
+        int index = (current_page - 1) * Settings.Default.NumOfItems + i;
+        movie_open = FileHelper.movies[index];
+        show_movie_info = true;
+        await JSRuntime.InvokeVoidAsync("scrollToTop");
+    }
+
+    private async Task OnBackClicked()
+    {
+        show_movie_info = false;
+        await RefreshPage();
+        await JSRuntime.InvokeVoidAsync("scrollToTop");
+    }
+
+    private async Task Init()
+    {
+        System.Diagnostics.Debug.WriteLine("Library init!");
+        InitSnackbar();
+        if (!FileHelper.isLoaded) await FileHelper.GetAllMovies();
+        await FileHelper.FilterMovies("");
+        await FileHelper.SortMovies();
+        LocalImageLoader.Init(JSRuntime);
+    }
+
+    WpfBlazor.Data.Movie? movie_main;
+    private async Task RefreshPage()
+    {
+        System.Diagnostics.Debug.WriteLine("Library refresh!");
+
+        num_page = FileHelper.movies.Count > 0 ? (int)Math.Ceiling((double)FileHelper.movies.Count / Settings.Default.NumOfItems) : 1;
+        num_items = (current_page != num_page) ? Settings.Default.NumOfItems : (FileHelper.movies.Count % Settings.Default.NumOfItems);
+        if (FileHelper.movies.Count > 0 && num_items == 0) num_items = Settings.Default.NumOfItems;
+        
+        int index = (current_page - 1) * Settings.Default.NumOfItems;
+        movie_main = FileHelper.movies.Count > 0 ? FileHelper.movies[index] : null;
+
+        await LoadLocalImage();
+        LoadTitle();
+        StateHasChanged();
+    }
+
+    private string[]? cover_img_urls;
+    private async Task LoadLocalImage()
+    {
+        cover_img_urls = new string[Settings.Default.NumOfItems];
+        
+        await LocalImageLoader.RevokeAll(0);
+        for (int i = 0; i < num_items; i++)
+        {
+            int index = i + (current_page - 1) * Settings.Default.NumOfItems;
+            cover_img_urls[i] = await LocalImageLoader.GenerateImgUrl(FileHelper.movies[index].cover, 0);
+        }
+    }
+
+    private string[]? titles;
+    private void LoadTitle()
+    {
+        titles = new string[Settings.Default.NumOfItems];
+        for (int i = 0; i < num_items; i++)
+        {
+            int index = i + (current_page - 1) * Settings.Default.NumOfItems;
+            titles[i] = FileHelper.movies[index].title;
+        }
+    }
+}

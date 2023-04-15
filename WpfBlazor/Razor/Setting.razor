@@ -1,0 +1,95 @@
+﻿<MudMainContent>
+    <MudContainer MaxWidth="MaxWidth.Medium" Class="py-8">
+        <div class="d-flex flex-row align-center">
+            <MudText Style="width:120px">
+                数据文件夹地址
+            </MudText>
+            <MudTextField Class="ml-4" @bind-Value="root_path" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        </div>
+        <div class="d-flex flex-row align-center mt-8">
+            <MudText Style="width:120px">
+                显示模式
+            </MudText>
+            <MudSelect @bind-Value="sort_flag" Class="ml-4" Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined">
+                <MudSelectItem Value="0">全部（依据影片码排序）</MudSelectItem>
+                <MudSelectItem Value="1">随机</MudSelectItem>
+            </MudSelect>
+        </div>
+        @if (sort_flag == 0)
+        {
+            <div class="d-flex flex-row align-center mt-8">
+                <MudText Style="width:120px">
+                    单页显示数量
+                </MudText>
+                <MudSlider Class="ml-6" @bind-Value="num_items" Min="1" Max="3" Step="1" TickMarks="true" TickMarkLabels="@num_items_labels" Style="max-width:200px" />
+            </div>
+        }
+        <div class="d-flex flex-row align-center mt-8">
+            <MudText Style="width:120px">
+                模糊图片
+            </MudText>
+            <MudSwitch Class="ml-4" @bind-Checked="@img_blur_checked" ThumbIcon="@(img_blur_checked? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(img_blur_checked? Color.Success : Color.Error)" />
+        </div>
+
+        <MudButton Class="mt-8" FullWidth=true Variant="Variant.Filled" Color="Color.Primary" OnClick="@((e) => SaveSettings())">
+            保存
+        </MudButton>
+    </MudContainer>
+</MudMainContent>
+
+@code {
+    string? root_path;
+    int sort_flag;
+    int num_items;
+    string[] num_items_labels = new string[] { "20", "50", "100" };
+    bool img_blur_checked = false;
+
+    protected override void OnInitialized()
+    {
+        ApplySettingsOnRender();
+    }
+
+    private void ApplySettingsOnRender()
+    {
+        root_path = Settings.Default.RootPath;
+        sort_flag = Settings.Default.SortFlag;
+        switch (Settings.Default.NumOfItems)
+        {
+            case 20:
+                num_items = 1;
+                break;
+            case 50:
+                num_items = 2;
+                break;
+            case 100:
+                num_items = 3;
+                break;
+            default:
+                break;
+        }
+        img_blur_checked = Settings.Default.IsImgBlured;
+    }
+
+    private void SaveSettings()
+    {
+        Settings.Default.RootPath = root_path;
+        Settings.Default.SortFlag = sort_flag;
+        switch (num_items)
+        {
+            case 1:
+                Settings.Default.NumOfItems = 20;
+                break;
+            case 2:
+                Settings.Default.NumOfItems = 50;
+                break;
+            case 3:
+                Settings.Default.NumOfItems = 100;
+                break;
+            default:
+                break;
+        }
+        Settings.Default.IsImgBlured = img_blur_checked;
+
+        Settings.Default.Save();
+    }
+}
