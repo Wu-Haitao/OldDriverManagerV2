@@ -1,11 +1,11 @@
-﻿<Window x:Class="WpfBlazor.MainWindow"
+﻿<Window x:Class="OldDriverManagerV2.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:blazor="clr-namespace:Microsoft.AspNetCore.Components.WebView.Wpf;assembly=Microsoft.AspNetCore.Components.WebView.Wpf"
-        xmlns:local="clr-namespace:WpfBlazor"
-        xmlns:razor="clr-namespace:WpfBlazor.Razor"
+        xmlns:local="clr-namespace:OldDriverManagerV2"
+        xmlns:razor="clr-namespace:OldDriverManagerV2.Razor"
         mc:Ignorable="d"
         Title="老司机管理器" Height="600" Width="1000" Icon="/driver.ico">
     <Grid>

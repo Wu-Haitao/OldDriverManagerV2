@@ -95,7 +95,7 @@
     }
 </MudMainContent>
 
-@using WpfBlazor.Util
+@using OldDriverManagerV2.Util
 @using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
@@ -152,7 +152,7 @@
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
     }
 
-    WpfBlazor.Data.Movie? movie_open;
+    OldDriverManagerV2.Data.Movie? movie_open;
     private async Task OnInfoClicked(int i)
     {
         int index = (current_page - 1) * Settings.Default.NumOfItems + i;
@@ -172,13 +172,13 @@
     {
         System.Diagnostics.Debug.WriteLine("Library init!");
         InitSnackbar();
-        if (!FileHelper.isLoaded) await FileHelper.GetAllMovies();
+        await FileHelper.GetAllMovies();
         await FileHelper.FilterMovies("");
         await FileHelper.SortMovies();
         LocalImageLoader.Init(JSRuntime);
     }
 
-    WpfBlazor.Data.Movie? movie_main;
+    OldDriverManagerV2.Data.Movie? movie_main;
     private async Task RefreshPage()
     {
         System.Diagnostics.Debug.WriteLine("Library refresh!");

@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace WpfBlazor.Util
+namespace OldDriverManagerV2.Util
 {
     internal static class LocalImageLoader
     {

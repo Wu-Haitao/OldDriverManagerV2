@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace WpfBlazor {
+namespace OldDriverManagerV2 {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

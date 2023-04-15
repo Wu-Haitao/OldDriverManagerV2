@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace WpfBlazor.Data
+namespace OldDriverManagerV2.Data
 {
     public class Movie
     {

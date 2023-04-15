@@ -37,13 +37,13 @@
 
 </MudContainer>
 
-@using WpfBlazor.Util
+@using OldDriverManagerV2.Util
 @inject ISnackbar Snackbar
 
 @code {
-    WpfBlazor.Data.Movie? _movie;
+    OldDriverManagerV2.Data.Movie? _movie;
     [Parameter]
-    public WpfBlazor.Data.Movie? movie { set; get; }
+    public OldDriverManagerV2.Data.Movie? movie { set; get; }
 
     protected override async Task OnParametersSetAsync()
     {

@@ -1,20 +1,19 @@
-﻿using System;
+﻿using OldDriverManagerV2.Data;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
-using WpfBlazor.Data;
 
-namespace WpfBlazor.Util
+namespace OldDriverManagerV2.Util
 {
     internal class FileHelper
     {
         private static List<Movie> _movies = new();
         public static List<Movie> movies = new();
-        public static bool isLoaded = false;
-        private static Random random = new Random();
+        private static Random random = new();
         private static Movie? GetMovie(string nfo_path)
         {
             if (!File.Exists(nfo_path)) return null;
@@ -70,8 +69,9 @@ namespace WpfBlazor.Util
             await Task.Run(() =>
             {
                 _movies.Clear();
-                isLoaded = true;
+                movies.Clear();
                 string root_path = Settings.Default.RootPath;
+                if (root_path == "") return;
                 string[] nfo_paths = Directory.GetFiles(root_path, "*.nfo", SearchOption.AllDirectories);
                 System.Diagnostics.Debug.WriteLine("Total Num: " + nfo_paths.Length);
                 foreach (string nfo_path in nfo_paths)
@@ -132,7 +132,7 @@ namespace WpfBlazor.Util
         public static async Task<List<string>> GetAllImgOfMovie(Movie movie)
         {
             string[] imgExtensions = { ".jpg", ".png" };
-            List<string> imgPaths = new List<string>();
+            List<string> imgPaths = new();
             await Task.Run(() =>
             {
                 foreach (string imgExtension in imgExtensions)

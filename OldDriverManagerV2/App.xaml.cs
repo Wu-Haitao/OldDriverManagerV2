@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace WpfBlazor
+namespace OldDriverManagerV2
 {
     /// <summary>
     /// Interaction logic for App.xaml
