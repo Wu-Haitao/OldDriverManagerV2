@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WpfBlazor.Data;
-using System.IO;
-using System.Xml;
-using System.Security;
-using System.Security.Policy;
-using System.Windows.Documents;
-using System.Web;
 using System.Diagnostics;
-using static MudBlazor.CategoryTypes;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Xml;
+using WpfBlazor.Data;
 
 namespace WpfBlazor.Util
 {
@@ -37,7 +31,7 @@ namespace WpfBlazor.Util
 
             XmlNode? numNode = rootNode.SelectSingleNode("num");
             string num = "";
-            if (numNode != null) num= numNode.InnerText;
+            if (numNode != null) num = numNode.InnerText;
 
             XmlNode? sellerNode = rootNode.SelectSingleNode("seller");
             string seller = "";
@@ -60,7 +54,7 @@ namespace WpfBlazor.Util
             XmlNode? coverNode = rootNode.SelectSingleNode("cover");
             string cover = "";
             if (coverNode != null) cover = coverNode.InnerText;
-            
+
             XmlNode? fanartNode = rootNode.SelectSingleNode("fanart");
             string fanart = "";
             if (fanartNode != null) fanart = fanartNode.InnerText;

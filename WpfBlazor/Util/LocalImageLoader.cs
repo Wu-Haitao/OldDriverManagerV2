@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.JSInterop;
-using MudBlazor.Charts.SVG.Models;
-using System.IO;
-using System.Security.Policy;
+﻿using Microsoft.JSInterop;
+using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace WpfBlazor.Util
 {
