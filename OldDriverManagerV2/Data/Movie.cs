@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace OldDriverManagerV2.Data
 {
@@ -25,6 +26,21 @@ namespace OldDriverManagerV2.Data
             this.fanart = fanart ?? throw new ArgumentNullException(nameof(fanart));
             this.website = website ?? throw new ArgumentNullException(nameof(website));
             this.nfo = nfo ?? throw new ArgumentNullException(nameof(nfo));
+        }
+        public bool ContainsKeywords(List<string> keywords)
+        {
+            foreach (string keyword in keywords)
+            {
+                if (!string.IsNullOrEmpty(title) && title.Contains(keyword))
+                    return true;
+                if (!string.IsNullOrEmpty(num) && num.Contains(keyword))
+                    return true;
+                if (!string.IsNullOrEmpty(seller) && seller.Contains(keyword))
+                    return true;
+                if (tags != null && tags.Any(tag => tag.Contains(keyword)))
+                    return true;
+            }
+            return false;
         }
     }
 }

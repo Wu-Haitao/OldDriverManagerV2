@@ -5,15 +5,35 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Shapes;
 using System.Xml;
 
 namespace OldDriverManagerV2.Util
 {
-    internal class FileHelper
+    internal class MovieListHandler
     {
         private static List<Movie> _movies = new();
         public static List<Movie> movies = new();
         private static Random random = new();
+        private static string GetInnerText(XmlNode rootNode, string nodeName)
+        {
+            XmlNode? node = rootNode.SelectSingleNode(nodeName);
+            if (node != null) return node.InnerText;
+            else return "";
+        }
+        private static List<string> GetInnerTextList(XmlNode rootNode, string nodeName)
+        {
+            List<string> list = new List<string>();
+            XmlNodeList? nodeList = rootNode.SelectNodes(nodeName);
+            if (nodeList != null)
+            {
+                foreach (XmlNode node in nodeList)
+                {
+                    list.Add(node.InnerText);
+                }
+            }
+            return list;
+        }
         private static Movie? GetMovie(string nfo_path)
         {
             if (!File.Exists(nfo_path)) return null;
@@ -24,43 +44,15 @@ namespace OldDriverManagerV2.Util
             XmlNode? rootNode = xml.SelectSingleNode("movie");
             if (rootNode == null) return null;
 
-            XmlNode? titleNode = rootNode.SelectSingleNode("title");
-            string title = "";
-            if (titleNode != null) title = titleNode.InnerText;
-
-            XmlNode? numNode = rootNode.SelectSingleNode("num");
-            string num = "";
-            if (numNode != null) num = numNode.InnerText;
-
-            XmlNode? sellerNode = rootNode.SelectSingleNode("seller");
-            string seller = "";
-            if (sellerNode != null) seller = sellerNode.InnerText;
-
-            XmlNodeList? tagNodes = rootNode.SelectNodes("tag");
-            List<string> tags = new();
-            if (tagNodes != null)
-            {
-                foreach (XmlNode tagNode in tagNodes)
-                {
-                    tags.Add(tagNode.InnerText);
-                }
-            }
-
-            XmlNode? fileNode = rootNode.SelectSingleNode("file");
-            string file = "";
-            if (fileNode != null) file = fileNode.InnerText;
-
-            XmlNode? coverNode = rootNode.SelectSingleNode("cover");
-            string cover = "";
-            if (coverNode != null) cover = coverNode.InnerText;
-
-            XmlNode? fanartNode = rootNode.SelectSingleNode("fanart");
-            string fanart = "";
-            if (fanartNode != null) fanart = fanartNode.InnerText;
-
-            XmlNode? websiteNode = rootNode.SelectSingleNode("website");
-            string website = "";
-            if (websiteNode != null) website = websiteNode.InnerText;
+            string title = GetInnerText(rootNode, "title");
+            string num = GetInnerText(rootNode, "num");
+            string seller = GetInnerText(rootNode, "seller");
+            List<string> casts = GetInnerTextList(rootNode, "cast");
+            List<string> tags = GetInnerTextList(rootNode, "tag");
+            string file = GetInnerText(rootNode, "file");
+            string cover = GetInnerText(rootNode, "cover");
+            string fanart = GetInnerText(rootNode, "fanart");
+            string website = GetInnerText(rootNode, "website");
 
             return new Movie(title, num, seller, tags, file, cover, fanart, website, nfo_path);
         }
@@ -71,9 +63,9 @@ namespace OldDriverManagerV2.Util
                 _movies.Clear();
                 movies.Clear();
                 string root_path = Settings.Default.RootPath;
-                if (root_path == "") return;
+                if (!Directory.Exists(root_path)) return;
                 string[] nfo_paths = Directory.GetFiles(root_path, "*.nfo", SearchOption.AllDirectories);
-                System.Diagnostics.Debug.WriteLine("Total Num: " + nfo_paths.Length);
+                //System.Diagnostics.Debug.WriteLine("Total Num: " + nfo_paths.Length);
                 foreach (string nfo_path in nfo_paths)
                 {
                     try
@@ -83,24 +75,24 @@ namespace OldDriverManagerV2.Util
                     }
                     catch
                     {
-                        System.Diagnostics.Debug.WriteLine("Error: " + nfo_path);
+                        //System.Diagnostics.Debug.WriteLine("Error: " + nfo_path);
                     }
                 }
-                System.Diagnostics.Debug.WriteLine("Nfo Files Loaded: " + _movies.Count);
+                //System.Diagnostics.Debug.WriteLine("Nfo Files Loaded: " + _movies.Count);
             });
         }
-        public static async Task FilterMovies(string? filterKey)
+        public static async Task FilterMovies(List<string> filterKeywords)
         {
-            if (filterKey == null || filterKey == "")
+            if (filterKeywords.Count == 0)
             {
                 movies = _movies.ToList();
                 return;
             }
             await Task.Run(() =>
             {
-                var query = from movie in _movies
-                            where movie.title.Contains(filterKey) || movie.num.Contains(filterKey) || movie.seller.Contains(filterKey) || movie.tags.Any(tag => tag.Contains(filterKey))
-                            select movie;
+                IEnumerable<Movie> query = from movie in _movies 
+                                           where movie.ContainsKeywords(filterKeywords) 
+                                           select movie;
                 movies = query.ToList();
             });
         }
@@ -129,18 +121,18 @@ namespace OldDriverManagerV2.Util
                 }
             });
         }
-        public static async Task<List<string>> GetAllImgOfMovie(Movie movie)
+        public static List<string> GetImgForMovie(Movie movie)
         {
             string[] imgExtensions = { ".jpg", ".png" };
             List<string> imgPaths = new();
-            await Task.Run(() =>
+            if (Directory.Exists(movie.fanart))
             {
                 foreach (string imgExtension in imgExtensions)
                 {
                     string[] paths = Directory.GetFiles(movie.fanart, "*" + imgExtension);
                     foreach (string path in paths) imgPaths.Add(path);
                 }
-            });
+            }
             return imgPaths;
         }
         public static bool PlayMovie(int index)
@@ -157,6 +149,12 @@ namespace OldDriverManagerV2.Util
             }
             else return false;
         }
+        public static bool OpenPathOfMovie(int index)
+        {
+            string path = movies[index].file;
+            return OpenPathOfMovie(path);
+
+        }
         public static bool OpenPathOfMovie(string path)
         {
             if (File.Exists(path))
@@ -167,11 +165,42 @@ namespace OldDriverManagerV2.Util
             }
             else return false;
         }
-        public static bool OpenNFO(string path)
+        public static bool OpenNFO(int index, string path)
         {
             if (File.Exists(path))
             {
-                Process.Start("explorer.exe", path);
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = path,
+                    UseShellExecute = true
+                };
+                Process? process = Process.Start(startInfo);
+                if (process == null) return false;
+                /*process.WaitForExit();
+                Movie? newMovie = GetMovie(path);
+                if (newMovie != null)
+                {
+                    int index_in_origin = _movies.IndexOf(movies[index]);
+                    movies[index] = newMovie;
+                    _movies[index_in_origin] = movies[index];
+                }*/
+
+                return true;
+            }
+            else return false;
+        }
+
+        public static bool DeleteNFO(int index, string path)
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+
+                Debug.WriteLine("Delete finished");
+                int index_in_origin = _movies.IndexOf(movies[index]);
+                movies.RemoveAt(index);
+                _movies.RemoveAt(index_in_origin);
+
                 return true;
             }
             else return false;

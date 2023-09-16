@@ -29,9 +29,11 @@
                 }
             }
             <MudDivider Class="my-4" />
-            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie.file))">播放</MudButton>
-            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFileMove" OnClick="@((e)=>OnOpenPathClicked(movie.file))">打开文件所在路径</MudButton>
-            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EditNote" OnClick="@((e)=>OpOpenNFOClicked(movie.nfo))">编辑属性文件</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie_index))">播放</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFileMove" OnClick="@((e)=>OnOpenPathClicked(movie_index))">打开文件所在路径</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EditNote" OnClick="@((e)=>OnOpenNFOClicked(movie_index, movie.nfo))">编辑属性文件</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Delete" OnClick="@((e)=>OnDeleteNFOClicked(movie_index, movie.nfo))">删除属性文件</MudButton>
+
         }
     </MudPaper>
 
@@ -41,9 +43,11 @@
 @inject ISnackbar Snackbar
 
 @code {
-    OldDriverManagerV2.Data.Movie? _movie;
+    OldDriverManagerV2.Data.Movie? _movie; //随机模式下强制刷新
     [Parameter]
     public OldDriverManagerV2.Data.Movie? movie { set; get; }
+    [Parameter]
+    public int movie_index { set; get; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -89,20 +93,42 @@
 
     private void OnPlayClicked(string path)
     {
-        bool flag = FileHelper.PlayMovie(path);
+        bool flag = MovieListHandler.PlayMovie(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+    private void OnPlayClicked(int index)
+    {
+        bool flag = MovieListHandler.PlayMovie(index);
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
     }
 
     private void OnOpenPathClicked(string path)
     {
-        bool flag = FileHelper.OpenPathOfMovie(path);
+        bool flag = MovieListHandler.OpenPathOfMovie(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+    private void OnOpenPathClicked(int index)
+    {
+        bool flag = MovieListHandler.OpenPathOfMovie(index);
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
     }
 
-    private void OpOpenNFOClicked(string path)
+    private void OnOpenNFOClicked(int index, string path)
     {
-        bool flag = FileHelper.OpenNFO(path);
+        bool flag = MovieListHandler.OpenNFO(index, path);
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+        /*else {
+            movie = MovieListHandler.movies[movie_index];
+            await RefreshPage();
+            Snackbar.Add("文件已修改", Severity.Success, config => { config.HideIcon = true; });
+        }*/
+    }
+
+    private void OnDeleteNFOClicked(int index, string path)
+    {
+        bool flag = MovieListHandler.DeleteNFO(index, path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+        else Snackbar.Add("文件已删除", Severity.Success, config => { config.HideIcon = true; });
     }
 
     private async Task RefreshPage()
@@ -116,7 +142,7 @@
     private async Task LoadLocalImage()
     {
         if (movie == null) return;
-        List<string> img_paths = await FileHelper.GetAllImgOfMovie(movie);
+        List<string> img_paths = MovieListHandler.GetImgForMovie(movie);
         img_urls.Clear();
         await LocalImageLoader.RevokeAll(1);
         if (img_paths.Count == 0) img_urls.Add(await LocalImageLoader.GenerateImgUrl(movie.cover, 1));

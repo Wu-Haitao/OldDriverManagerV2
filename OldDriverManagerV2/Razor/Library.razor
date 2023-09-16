@@ -47,9 +47,9 @@
                 case 1:
                     <MudGrid>
                         <MudItem xs="12" sm="6">
-                            @if (FileHelper.movies.Count > 0)
+                            @if (MovieListHandler.movies.Count > 0)
                             {
-                                <Movie movie="@movie_main" />
+                                <Movie movie="@movie_main" movie_index="0" />
                             }
                         </MudItem>
                         @if (num_items > 1)
@@ -91,7 +91,7 @@
         <div class="fixed pl-4 pt-4 z-100">
             <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@((e)=>OnBackClicked())" />
         </div>
-        <Movie movie="@movie_open" />
+        <Movie movie="@movie_open" movie_index="@movie_open_index" />
     }
 </MudMainContent>
 
@@ -127,8 +127,8 @@
     {
         search_text = debouncedText;
         current_page = 1;
-        await FileHelper.FilterMovies(debouncedText);
-        await FileHelper.SortMovies();
+        await MovieListHandler.FilterMovies(debouncedText);
+        await MovieListHandler.SortMovies();
         await RefreshPage();
     }
 
@@ -141,22 +141,23 @@
 
     private async Task OnRefreshClicked()
     {
-        await FileHelper.SortMovies();
+        await MovieListHandler.SortMovies();
         await RefreshPage();
     }
 
     private void OnPlayClicked(int i)
     {
         int index = (current_page - 1) * Settings.Default.NumOfItems + i;
-        bool flag = FileHelper.PlayMovie(index);
+        bool flag = MovieListHandler.PlayMovie(index);
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
     }
 
+    int movie_open_index;
     OldDriverManagerV2.Data.Movie? movie_open;
     private async Task OnInfoClicked(int i)
     {
-        int index = (current_page - 1) * Settings.Default.NumOfItems + i;
-        movie_open = FileHelper.movies[index];
+        movie_open_index = (current_page - 1) * Settings.Default.NumOfItems + i;
+        movie_open = MovieListHandler.movies[movie_open_index];
         show_movie_info = true;
         await JSRuntime.InvokeVoidAsync("scrollToTop");
     }
@@ -172,9 +173,9 @@
     {
         System.Diagnostics.Debug.WriteLine("Library init!");
         InitSnackbar();
-        await FileHelper.GetAllMovies();
-        await FileHelper.FilterMovies("");
-        await FileHelper.SortMovies();
+        await MovieListHandler.GetAllMovies();
+        await MovieListHandler.FilterMovies("");
+        await MovieListHandler.SortMovies();
         LocalImageLoader.Init(JSRuntime);
     }
 
@@ -183,12 +184,11 @@
     {
         System.Diagnostics.Debug.WriteLine("Library refresh!");
 
-        num_page = FileHelper.movies.Count > 0 ? (int)Math.Ceiling((double)FileHelper.movies.Count / Settings.Default.NumOfItems) : 1;
-        num_items = (current_page != num_page) ? Settings.Default.NumOfItems : (FileHelper.movies.Count % Settings.Default.NumOfItems);
-        if (FileHelper.movies.Count > 0 && num_items == 0) num_items = Settings.Default.NumOfItems;
-        
-        int index = (current_page - 1) * Settings.Default.NumOfItems;
-        movie_main = FileHelper.movies.Count > 0 ? FileHelper.movies[index] : null;
+        num_page = MovieListHandler.movies.Count > 0 ? (int)Math.Ceiling((double)MovieListHandler.movies.Count / Settings.Default.NumOfItems) : 1;
+        num_items = (current_page != num_page) ? Settings.Default.NumOfItems : (MovieListHandler.movies.Count % Settings.Default.NumOfItems);
+        if (MovieListHandler.movies.Count > 0 && num_items == 0) num_items = Settings.Default.NumOfItems;
+
+        movie_main = MovieListHandler.movies.Count > 0 ? MovieListHandler.movies[0] : null;
 
         await LoadLocalImage();
         LoadTitle();
@@ -199,12 +199,12 @@
     private async Task LoadLocalImage()
     {
         cover_img_urls = new string[Settings.Default.NumOfItems];
-        
+
         await LocalImageLoader.RevokeAll(0);
         for (int i = 0; i < num_items; i++)
         {
             int index = i + (current_page - 1) * Settings.Default.NumOfItems;
-            cover_img_urls[i] = await LocalImageLoader.GenerateImgUrl(FileHelper.movies[index].cover, 0);
+            cover_img_urls[i] = await LocalImageLoader.GenerateImgUrl(MovieListHandler.movies[index].cover, 0);
         }
     }
 
@@ -215,7 +215,7 @@
         for (int i = 0; i < num_items; i++)
         {
             int index = i + (current_page - 1) * Settings.Default.NumOfItems;
-            titles[i] = FileHelper.movies[index].title;
+            titles[i] = MovieListHandler.movies[index].title;
         }
     }
 }
