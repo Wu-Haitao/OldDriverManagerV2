@@ -13,7 +13,7 @@
             {
                 case 0:
                     <MudGrid Justify="Justify.Center" Class="py-8">
-                    @for (int _i = 0; _i < num_items; _i++)
+                    @for (int _i = 0; _i < item_num; _i++)
                 {
                     int _index = _i;
                     <MudItem>
@@ -42,21 +42,21 @@
                 }
 
                     </MudGrid>
-                    <MudPagination Selected="current_page" Class="py-4" Count="num_page" SelectedChanged="OnPageChanged" />
+                    <MudPagination Selected="current_page_index" Class="py-4" Count="page_num" SelectedChanged="OnPageChanged" />
                     break;
                 case 1:
                     <MudGrid>
                         <MudItem xs="12" sm="6">
                             @if (MovieListHandler.movies.Count > 0)
                             {
-                                <Movie movie="@movie_main" movie_index="0" />
+                                <Movie movie="@movie_main" />
                             }
                         </MudItem>
-                        @if (num_items > 1)
+                        @if (item_num > 1)
                         {
                             <MudItem xs="12" sm="6">
                                 <MudGrid Justify="Justify.SpaceEvenly" Class="pt-12">
-                                    @for (int _i = 1; _i < Math.Min(13, num_items); _i++)
+                                    @for (int _i = 1; _i < Math.Min(13, item_num); _i++)
                                     {
                                         int _index = _i; 
                                         <MudItem>
@@ -91,7 +91,7 @@
         <div class="fixed pl-4 pt-4 z-100">
             <MudFab Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@((e)=>OnBackClicked())" />
         </div>
-        <Movie movie="@movie_open" movie_index="@movie_open_index" />
+        <Movie movie="@selected_movie" />
     }
 </MudMainContent>
 
@@ -102,9 +102,12 @@
 
 @code {
     bool show_movie_info = false;
-    int num_page = 1;
-    int current_page = 1;
-    int num_items = 0;
+    int page_num = 1;
+    int current_page_index = 1;
+    int item_num = 0;
+    string search_text = "";
+    int selected_movie_index;
+    OldDriverManagerV2.Data.Movie? selected_movie;
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,11 +125,10 @@
         Snackbar.Configuration.PreventDuplicates = true;
     }
 
-    string search_text = "";
     private async Task OnDebounceIntervalElapsed(string debouncedText)
     {
         search_text = debouncedText;
-        current_page = 1;
+        current_page_index = 1;
         await MovieListHandler.FilterMovies(debouncedText);
         await MovieListHandler.SortMovies();
         await RefreshPage();
@@ -134,7 +136,7 @@
 
     private async Task OnPageChanged(int i)
     {
-        current_page = i;
+        current_page_index = i;
         await RefreshPage();
         await JSRuntime.InvokeVoidAsync("scrollToTop");
     }
@@ -147,17 +149,16 @@
 
     private void OnPlayClicked(int i)
     {
-        int index = (current_page - 1) * Settings.Default.NumOfItems + i;
+        int index = (current_page_index - 1) * Settings.Default.NumOfItems + i;
         bool flag = MovieListHandler.PlayMovie(index);
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
     }
 
-    int movie_open_index;
-    OldDriverManagerV2.Data.Movie? movie_open;
+
     private async Task OnInfoClicked(int i)
     {
-        movie_open_index = (current_page - 1) * Settings.Default.NumOfItems + i;
-        movie_open = MovieListHandler.movies[movie_open_index];
+        selected_movie_index = (current_page_index - 1) * Settings.Default.NumOfItems + i;
+        selected_movie = MovieListHandler.movies[selected_movie_index];
         show_movie_info = true;
         await JSRuntime.InvokeVoidAsync("scrollToTop");
     }
@@ -184,9 +185,9 @@
     {
         System.Diagnostics.Debug.WriteLine("Library refresh!");
 
-        num_page = MovieListHandler.movies.Count > 0 ? (int)Math.Ceiling((double)MovieListHandler.movies.Count / Settings.Default.NumOfItems) : 1;
-        num_items = (current_page != num_page) ? Settings.Default.NumOfItems : (MovieListHandler.movies.Count % Settings.Default.NumOfItems);
-        if (MovieListHandler.movies.Count > 0 && num_items == 0) num_items = Settings.Default.NumOfItems;
+        page_num = MovieListHandler.movies.Count > 0 ? (int)Math.Ceiling((double)MovieListHandler.movies.Count / Settings.Default.NumOfItems) : 1;
+        item_num = (current_page_index != page_num) ? Settings.Default.NumOfItems : (MovieListHandler.movies.Count % Settings.Default.NumOfItems);
+        if (MovieListHandler.movies.Count > 0 && item_num == 0) item_num = Settings.Default.NumOfItems;
 
         movie_main = MovieListHandler.movies.Count > 0 ? MovieListHandler.movies[0] : null;
 
@@ -201,9 +202,9 @@
         cover_img_urls = new string[Settings.Default.NumOfItems];
 
         await LocalImageLoader.RevokeAll(0);
-        for (int i = 0; i < num_items; i++)
+        for (int i = 0; i < item_num; i++)
         {
-            int index = i + (current_page - 1) * Settings.Default.NumOfItems;
+            int index = i + (current_page_index - 1) * Settings.Default.NumOfItems;
             cover_img_urls[i] = await LocalImageLoader.GenerateImgUrl(MovieListHandler.movies[index].cover, 0);
         }
     }
@@ -212,9 +213,9 @@
     private void LoadTitle()
     {
         titles = new string[Settings.Default.NumOfItems];
-        for (int i = 0; i < num_items; i++)
+        for (int i = 0; i < item_num; i++)
         {
-            int index = i + (current_page - 1) * Settings.Default.NumOfItems;
+            int index = i + (current_page_index - 1) * Settings.Default.NumOfItems;
             titles[i] = MovieListHandler.movies[index].title;
         }
     }

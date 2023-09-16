@@ -6,7 +6,7 @@
     <MudAppBar Dense=true>
         <MudIconButton Icon="@Icons.Material.Filled.Menu"Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
     </MudAppBar>
-    <MudDrawer @bind-Open="@_drawerOpen" Variant="DrawerVariant.Persistent" Color="Color.Primary">
+    <MudDrawer @bind-Open="@drawer_open" Variant="DrawerVariant.Persistent" Color="Color.Primary">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">安全驾驶</MudText>
         </MudDrawerHeader>
@@ -41,16 +41,16 @@
 
     Page current_page = Page.Library;
 
-    bool _drawerOpen = false;
+    bool drawer_open = false;
 
     void DrawerToggle()
     {
-        _drawerOpen = !_drawerOpen;
+        drawer_open = !drawer_open;
     }
 
     void OpenPage(Page new_page)
     {
-        _drawerOpen = false;
+        drawer_open = false;
         current_page = new_page;
     }
 

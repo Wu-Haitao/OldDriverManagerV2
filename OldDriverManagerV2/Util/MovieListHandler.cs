@@ -81,6 +81,11 @@ namespace OldDriverManagerV2.Util
                 //System.Diagnostics.Debug.WriteLine("Nfo Files Loaded: " + _movies.Count);
             });
         }
+        public static async Task FilterMovies(string filterText)
+        {
+            List<string> keywords = filterText.Split(" ").ToList();
+            await FilterMovies(keywords);
+        }
         public static async Task FilterMovies(List<string> filterKeywords)
         {
             if (filterKeywords.Count == 0)
@@ -157,53 +162,21 @@ namespace OldDriverManagerV2.Util
         }
         public static bool OpenPathOfMovie(string path)
         {
+            return OpenPathOfFile(path);
+        }
+        public static bool OpenPathOfFile(string path)
+        {
             if (File.Exists(path))
             {
                 string argument = "/select, \"" + path + "\"";
                 Process.Start("explorer.exe", argument);
                 return true;
             }
-            else return false;
-        }
-        public static bool OpenNFO(int index, string path)
-        {
-            if (File.Exists(path))
+            else
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = path,
-                    UseShellExecute = true
-                };
-                Process? process = Process.Start(startInfo);
-                if (process == null) return false;
-                /*process.WaitForExit();
-                Movie? newMovie = GetMovie(path);
-                if (newMovie != null)
-                {
-                    int index_in_origin = _movies.IndexOf(movies[index]);
-                    movies[index] = newMovie;
-                    _movies[index_in_origin] = movies[index];
-                }*/
-
-                return true;
+                return false;
             }
-            else return false;
         }
 
-        public static bool DeleteNFO(int index, string path)
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-
-                Debug.WriteLine("Delete finished");
-                int index_in_origin = _movies.IndexOf(movies[index]);
-                movies.RemoveAt(index);
-                _movies.RemoveAt(index_in_origin);
-
-                return true;
-            }
-            else return false;
-        }
     }
 }
