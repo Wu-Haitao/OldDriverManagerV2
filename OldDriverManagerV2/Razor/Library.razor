@@ -14,42 +14,23 @@
                 case 0:
                     <MudGrid Justify="Justify.Center" Class="py-8">
                     @for (int _i = 0; _i < item_num; _i++)
-                {
-                    int _index = _i;
-                    <MudItem>
-                        <MudCard Style="width:160px" Elevation="3">
-                            @if (cover_img_urls != null)
+                    {
+                            int _index = (current_page_index - 1) * Settings.Default.NumOfItems + _i;
+                            if (MovieListHandler.movies.Count > _index)
                             {
-                                <MudCardMedia Style="@(Settings.Default.IsImgBlured? "filter:blur(12px)":"")" Image="@cover_img_urls[_index]" Height="120" />
+                                <MovieThumb movie="@MovieListHandler.movies[_index]" OnInfoClicked="@OnInfoClicked" />
                             }
-                            @if (titles != null)
-                            {
-                                <MudCardContent>
-                                    <MudText Style="text-overflow: ellipsis;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 3;overflow: hidden;" Typo="Typo.body1">@titles[_index]</MudText>
-                                </MudCardContent>
-                            }
-                            <MudCardActions>
-                                <MudTooltip Text="播放">
-                                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(_index))" />
-                                </MudTooltip>
-                                <MudSpacer />
-                                <MudTooltip Text="详情">
-                                    <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" OnClick="@((e)=>OnInfoClicked(_index))" />
-                                </MudTooltip>
-                            </MudCardActions>
-                        </MudCard>
-                    </MudItem>
-                }
+                    }
 
                     </MudGrid>
-                    <MudPagination Selected="current_page_index" Class="py-4" Count="page_num" SelectedChanged="OnPageChanged" />
+                    <MudPagination Class="py-4" Count="page_num" SelectedChanged="OnPageChanged" />
                     break;
                 case 1:
                     <MudGrid>
                         <MudItem xs="12" sm="6">
                             @if (MovieListHandler.movies.Count > 0)
                             {
-                                <Movie movie="@movie_main" />
+                                <Movie movie="@main_movie" />
                             }
                         </MudItem>
                         @if (item_num > 1)
@@ -58,26 +39,12 @@
                                 <MudGrid Justify="Justify.SpaceEvenly" Class="pt-12">
                                     @for (int _i = 1; _i < Math.Min(13, item_num); _i++)
                                     {
-                                        int _index = _i; 
-                                        <MudItem>
-                                            <MudCard Style="width:160px" Elevation="3">
-                                                @if (cover_img_urls != null)
-                                                {
-                                                    <MudCardMedia Style="@(Settings.Default.IsImgBlured? "filter:blur(12px)":"")" Image="@cover_img_urls[_index]" Height="120" />
-                                                }
-                                                <MudCardActions>
-                                                    <MudTooltip Text="播放">
-                                                        <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(_index))" />
-                                                    </MudTooltip>
-                                                    <MudSpacer />
-                                                    <MudTooltip Text="详情">
-                                                        <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" OnClick="@((e)=>OnInfoClicked(_index))" />
-                                                    </MudTooltip>
-                                                </MudCardActions>
-                                            </MudCard>
-                                        </MudItem>
+                                        int _index = (current_page_index - 1) * Settings.Default.NumOfItems + _i;
+                                        if (MovieListHandler.movies.Count > _index)
+                                        {
+                                            <MovieThumb movie="@MovieListHandler.movies[_index]" OnInfoClicked="@OnInfoClicked" />
+                                        }
                                     }
-
                                 </MudGrid>
                             </MudItem>
                         }
@@ -101,18 +68,19 @@
 @inject ISnackbar Snackbar
 
 @code {
-    bool show_movie_info = false;
-    int page_num = 1;
-    int current_page_index = 1;
-    int item_num = 0;
-    string search_text = "";
-    int selected_movie_index;
-    OldDriverManagerV2.Data.Movie? selected_movie;
+    private bool show_movie_info = false;
+    private int page_num = 1;
+    private int current_page_index = 1;
+    private int item_num = 0;
+    private string search_text = "";
+    private int selected_movie_index;
+    private OldDriverManagerV2.Data.Movie? selected_movie;
+    private OldDriverManagerV2.Data.Movie? main_movie;
 
     protected override async Task OnInitializedAsync()
     {
         await Init();
-        await RefreshPage();
+        RefreshPage();
     }
 
     private void InitSnackbar()
@@ -125,49 +93,43 @@
         Snackbar.Configuration.PreventDuplicates = true;
     }
 
-    private async Task OnDebounceIntervalElapsed(string debouncedText)
+    private async void OnDebounceIntervalElapsed(string debouncedText)
     {
         search_text = debouncedText;
-        current_page_index = 1;
         await MovieListHandler.FilterMovies(debouncedText);
         await MovieListHandler.SortMovies();
-        await RefreshPage();
+        current_page_index = 1;
+        RefreshPage();
     }
 
-    private async Task OnPageChanged(int i)
+    private async void OnPageChanged(int i)
     {
-        current_page_index = i;
-        await RefreshPage();
+        //await LocalImageLoader.RevokeAll();
         await JSRuntime.InvokeVoidAsync("scrollToTop");
+        current_page_index = i;
+        RefreshPage();
     }
 
-    private async Task OnRefreshClicked()
+    private async void OnRefreshClicked()
     {
+        //await LocalImageLoader.RevokeAll();
         await MovieListHandler.SortMovies();
-        await RefreshPage();
+        RefreshPage();
     }
 
-    private void OnPlayClicked(int i)
+    private async void OnInfoClicked(OldDriverManagerV2.Data.Movie movie)
     {
-        int index = (current_page_index - 1) * Settings.Default.NumOfItems + i;
-        bool flag = MovieListHandler.PlayMovie(index);
-        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
-    }
-
-
-    private async Task OnInfoClicked(int i)
-    {
-        selected_movie_index = (current_page_index - 1) * Settings.Default.NumOfItems + i;
-        selected_movie = MovieListHandler.movies[selected_movie_index];
+        selected_movie = movie;
         show_movie_info = true;
         await JSRuntime.InvokeVoidAsync("scrollToTop");
+        StateHasChanged();
     }
 
-    private async Task OnBackClicked()
+    private async void OnBackClicked()
     {
         show_movie_info = false;
-        await RefreshPage();
         await JSRuntime.InvokeVoidAsync("scrollToTop");
+        RefreshPage();
     }
 
     private async Task Init()
@@ -180,8 +142,7 @@
         LocalImageLoader.Init(JSRuntime);
     }
 
-    OldDriverManagerV2.Data.Movie? movie_main;
-    private async Task RefreshPage()
+    private void RefreshPage()
     {
         System.Diagnostics.Debug.WriteLine("Library refresh!");
 
@@ -189,34 +150,9 @@
         item_num = (current_page_index != page_num) ? Settings.Default.NumOfItems : (MovieListHandler.movies.Count % Settings.Default.NumOfItems);
         if (MovieListHandler.movies.Count > 0 && item_num == 0) item_num = Settings.Default.NumOfItems;
 
-        movie_main = MovieListHandler.movies.Count > 0 ? MovieListHandler.movies[0] : null;
+        main_movie = MovieListHandler.movies.Count > 0 ? MovieListHandler.movies[0] : null;
 
-        await LoadLocalImage();
-        LoadTitle();
         StateHasChanged();
     }
 
-    private string[]? cover_img_urls;
-    private async Task LoadLocalImage()
-    {
-        cover_img_urls = new string[Settings.Default.NumOfItems];
-
-        await LocalImageLoader.RevokeAll(0);
-        for (int i = 0; i < item_num; i++)
-        {
-            int index = i + (current_page_index - 1) * Settings.Default.NumOfItems;
-            cover_img_urls[i] = await LocalImageLoader.GenerateImgUrl(MovieListHandler.movies[index].cover, 0);
-        }
-    }
-
-    private string[]? titles;
-    private void LoadTitle()
-    {
-        titles = new string[Settings.Default.NumOfItems];
-        for (int i = 0; i < item_num; i++)
-        {
-            int index = i + (current_page_index - 1) * Settings.Default.NumOfItems;
-            titles[i] = MovieListHandler.movies[index].title;
-        }
-    }
 }

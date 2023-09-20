@@ -40,17 +40,21 @@
 
 @using OldDriverManagerV2.Util
 @inject ISnackbar Snackbar
+@implements IAsyncDisposable
 
 @code {
     private OldDriverManagerV2.Data.Movie? _movie;
     [Parameter]
     public OldDriverManagerV2.Data.Movie? movie { set; get; }
+    private List<string> img_urls = new();
 
     protected override async Task OnParametersSetAsync()
     {
         if (_movie == movie) return;
+        await UnloadLocalImage(_movie);
         _movie = movie;
-        await RefreshPage();
+        await LoadLocalImage(movie);
+        StateHasChanged();
     }
 
     protected override void OnInitialized()
@@ -105,24 +109,30 @@
         if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
     }
 
-    private async Task RefreshPage()
+    private async Task LoadLocalImage(OldDriverManagerV2.Data.Movie? movie_load)
     {
-        System.Diagnostics.Debug.WriteLine("Movie refresh!");
-        await LoadLocalImage();
-        StateHasChanged();
-    }
-
-    private List<string> img_urls = new();
-    private async Task LoadLocalImage()
-    {
-        if (movie == null) return;
-        List<string> img_paths = MovieListHandler.GetImgForMovie(movie);
+        if (movie_load == null) return;
+        List<string> img_paths = MovieListHandler.GetImgForMovie(movie_load);
         img_urls.Clear();
-        await LocalImageLoader.RevokeAll(1);
-        if (img_paths.Count == 0) img_urls.Add(await LocalImageLoader.GenerateImgUrl(movie.cover, 1));
         foreach (string img_path in img_paths)
         {
-            img_urls.Add(await LocalImageLoader.GenerateImgUrl(img_path, 1));
+            img_urls.Add(await LocalImageLoader.GenerateImgUrl(img_path));
         }
+    }
+
+    private async Task UnloadLocalImage(OldDriverManagerV2.Data.Movie? movie_unload)
+    {
+        if (movie_unload == null) return;
+        List<string> img_paths = MovieListHandler.GetImgForMovie(movie_unload);
+        img_urls.Clear();
+        foreach (string img_path in img_paths)
+        {
+            await LocalImageLoader.RevokePath(img_path);
+        }
+    }
+
+    public async System.Threading.Tasks.ValueTask DisposeAsync()
+    {
+        await UnloadLocalImage(movie);
     }
 }

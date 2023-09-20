@@ -1,7 +1,9 @@
 ﻿using Microsoft.JSInterop;
-using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace OldDriverManagerV2.Util
@@ -10,49 +12,59 @@ namespace OldDriverManagerV2.Util
     {
         private static IJSRuntime? JS;
         private static ConcurrentDictionary<string, string> urls = new();
-        private static ConcurrentDictionary<string, string> urls_0 = new();
+        private static ConcurrentDictionary<string, int> buffer = new();
 
         public static void Init(IJSRuntime js)
         {
             JS = js;
         }
-        public static async Task<string> GenerateImgUrl(string? path, int index)
+
+        public static async Task<string> GenerateImgUrl(string? path)
         {
             if (JS == null || path == null) return "";
-            Byte[] file = await File.ReadAllBytesAsync(path);
-            string url = await JS.InvokeAsync<string>("byteToUrl", file);
-            switch (index)
+            string? url;
+            if (!urls.ContainsKey(path))
             {
-                case 0:
-                    urls.TryAdd(path, url);
-                    break;
-                case 1:
-                    urls_0.TryAdd(path, url);
-                    break;
+                byte[] file = await File.ReadAllBytesAsync(path);
+                url = await JS.InvokeAsync<string>("byteToUrl", file);
+                urls.TryAdd(path, url);
+                buffer.TryAdd(path, 1);
             }
-            return url;
+            else
+            {
+                buffer[path] = buffer[path] + 1;
+                url = urls[path];
+            }
+            Debug.WriteLine(urls.Count);
+
+            if (url != null) return url;
+            else return "";
         }
 
-        public static async Task RevokeAll(int index)
+
+        public static async Task RevokePath(string path)
         {
             if (JS == null) return;
-            switch (index)
+            if (urls.ContainsKey(path))
             {
-                case 0:
-                    foreach (string url in urls.Values)
+                if (buffer[path] == 1)
+                {
+                    buffer.TryRemove(path, out _);
+                    string? url;
+                    urls.TryRemove(path, out url);
+                    if (!string.IsNullOrEmpty(url))
                     {
                         await JS.InvokeVoidAsync("revokeUrl", url);
                     }
-                    urls.Clear();
-                    break;
-                case 1:
-                    foreach (string url in urls_0.Values)
-                    {
-                        await JS.InvokeVoidAsync("revokeUrl", url);
-                    }
-                    urls_0.Clear();
-                    break;
+                }
+                else
+                {
+                    buffer[path] = buffer[path] - 1;
+                }
             }
+            Debug.WriteLine(urls.Count);
+
         }
+
     }
 }

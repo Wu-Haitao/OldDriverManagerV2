@@ -1,0 +1,85 @@
+<MudItem>
+    <MudCard Style="width:160px" Elevation="3">
+        <MudCardMedia Style="@(Settings.Default.IsImgBlured? "filter:blur(12px)":"")" Image="@cover_img_url" Height="120" />
+        @if ((movie != null) && (OnInfoClicked != null))
+        {
+            <MudCardContent>
+                <MudText Style="text-overflow: ellipsis;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp: 3;overflow: hidden;" Typo="Typo.body1">@movie.title</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudTooltip Text="播放">
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie.file))" />
+                </MudTooltip>
+                <MudSpacer />
+                <MudTooltip Text="详情">
+                    <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" OnClick="@((e)=>OnInfoClicked(movie))" />
+                </MudTooltip>
+            </MudCardActions>
+        }
+    </MudCard>
+</MudItem>
+
+@using OldDriverManagerV2.Util
+@inject ISnackbar Snackbar
+@implements IAsyncDisposable
+
+@code {
+    private OldDriverManagerV2.Data.Movie? _movie;
+    [Parameter]
+    public OldDriverManagerV2.Data.Movie? movie { set; get; }
+    [Parameter]
+    public Action<OldDriverManagerV2.Data.Movie?>? OnInfoClicked { set; get; }
+    private string cover_img_url = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_movie == movie) return;
+        await UnloadLocalImage(_movie);
+        _movie = movie;
+        await LoadLocalImage(movie);
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        Init();
+    }
+
+    private void Init()
+    {
+        InitSnackbar();
+    }
+
+    private void InitSnackbar()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        Snackbar.Configuration.ShowTransitionDuration = 200;
+        Snackbar.Configuration.HideTransitionDuration = 200;
+        Snackbar.Configuration.VisibleStateDuration = 800;
+        Snackbar.Configuration.SnackbarVariant = Variant.Text;
+        Snackbar.Configuration.PreventDuplicates = true;
+    }
+
+    private void OnPlayClicked(string path)
+    {
+        bool flag = MovieListHandler.PlayMovie(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    private async Task LoadLocalImage(OldDriverManagerV2.Data.Movie? movie_load)
+    {
+        if (movie_load == null) return;
+        cover_img_url = await LocalImageLoader.GenerateImgUrl(movie_load.cover);
+    }
+
+    private async Task UnloadLocalImage(OldDriverManagerV2.Data.Movie? movie_unload)
+    {
+        if (movie_unload == null) return;
+        await LocalImageLoader.RevokePath(movie_unload.cover);
+    }
+
+    public async System.Threading.Tasks.ValueTask DisposeAsync()
+    {
+        await UnloadLocalImage(movie);
+    }
+}
