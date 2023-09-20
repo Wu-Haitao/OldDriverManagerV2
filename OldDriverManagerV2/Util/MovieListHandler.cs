@@ -54,7 +54,7 @@ namespace OldDriverManagerV2.Util
             string fanart = GetInnerText(rootNode, "fanart");
             string website = GetInnerText(rootNode, "website");
 
-            return new Movie(title, num, seller, tags, file, cover, fanart, website, nfo_path);
+            return new Movie(title, num, seller, casts, tags, file, cover, fanart, website, nfo_path);
         }
         public static async Task GetAllMovies()
         {
@@ -65,7 +65,6 @@ namespace OldDriverManagerV2.Util
                 string root_path = Settings.Default.RootPath;
                 if (!Directory.Exists(root_path)) return;
                 string[] nfo_paths = Directory.GetFiles(root_path, "*.nfo", SearchOption.AllDirectories);
-                //System.Diagnostics.Debug.WriteLine("Total Num: " + nfo_paths.Length);
                 foreach (string nfo_path in nfo_paths)
                 {
                     try
@@ -75,7 +74,7 @@ namespace OldDriverManagerV2.Util
                     }
                     catch
                     {
-                        //System.Diagnostics.Debug.WriteLine("Error: " + nfo_path);
+                        System.Diagnostics.Debug.WriteLine("Error: " + nfo_path);
                     }
                 }
                 //System.Diagnostics.Debug.WriteLine("Nfo Files Loaded: " + _movies.Count);

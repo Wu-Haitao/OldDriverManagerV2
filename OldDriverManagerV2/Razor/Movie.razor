@@ -2,7 +2,7 @@
     @if (img_urls.Count > 0)
     {
         <MudPaper Class="mt-4" Elevation="3">
-            <MudCarousel Class="mud-width-full rounded" TData="object" Style="height:400px" ShowArrows=false>
+            <MudCarousel Class="mud-width-full rounded" TData="object" Style="height:400px" ShowArrows=true ShowBullets=false>
             @foreach (string img_url in img_urls)
             {
                 <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
@@ -18,8 +18,19 @@
             <MudText Typo="Typo.h6">@movie.title</MudText>
             <MudDivider Class="my-4"/>
             <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Numbers" Size="Size.Small" /> @movie.num</MudText>
-            <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Sell" Size="Size.Small" /> @movie.seller</MudText>
+            @if (movie.seller != "")
+            {
+                <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Sell" Size="Size.Small" /> @movie.seller</MudText>
+            }
             <MudText Typo="Typo.subtitle1"><MudIcon Icon="@Icons.Material.Filled.Link" Size="Size.Small" /> <MudLink Href="@movie.website">链接</MudLink></MudText>
+            @if (movie.casts.Count > 0)
+            {
+                <MudDivider Class="my-4" />
+                @foreach (string _cast in movie.casts)
+                {
+                    <MudChip Variant="Variant.Text" Color="Color.Primary" OnClick="@((e)=>OnCopyClicked(_cast))">@_cast</MudChip>
+                }
+            }
             @if (movie.tags.Count > 0)
             {
                 <MudDivider Class="my-4" />
