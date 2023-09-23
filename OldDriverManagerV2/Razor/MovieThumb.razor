@@ -69,6 +69,7 @@
     private async Task LoadLocalImage(OldDriverManagerV2.Data.Movie? movie_load)
     {
         if (movie_load == null) return;
+        await Task.Delay(50); // Not elegant but is working
         cover_img_url = await LocalImageLoader.GenerateImgUrl(movie_load.cover);
     }
 

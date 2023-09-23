@@ -125,6 +125,7 @@
         if (movie_load == null) return;
         List<string> img_paths = MovieListHandler.GetImgForMovie(movie_load);
         img_urls.Clear();
+        await Task.Delay(50); // Not elegant but is working
         foreach (string img_path in img_paths)
         {
             img_urls.Add(await LocalImageLoader.GenerateImgUrl(img_path));

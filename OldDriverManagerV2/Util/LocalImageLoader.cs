@@ -12,7 +12,6 @@ namespace OldDriverManagerV2.Util
     {
         private static IJSRuntime? JS;
         private static ConcurrentDictionary<string, string> urls = new();
-        private static ConcurrentDictionary<string, int> buffer = new();
 
         public static void Init(IJSRuntime js)
         {
@@ -28,11 +27,9 @@ namespace OldDriverManagerV2.Util
                 byte[] file = await File.ReadAllBytesAsync(path);
                 url = await JS.InvokeAsync<string>("byteToUrl", file);
                 urls.TryAdd(path, url);
-                buffer.TryAdd(path, 1);
             }
             else
             {
-                buffer[path] = buffer[path] + 1;
                 url = urls[path];
             }
             Debug.WriteLine(urls.Count);
@@ -47,19 +44,11 @@ namespace OldDriverManagerV2.Util
             if (JS == null) return;
             if (urls.ContainsKey(path))
             {
-                if (buffer[path] == 1)
+                string? url;
+                urls.TryRemove(path, out url);
+                if (!string.IsNullOrEmpty(url))
                 {
-                    buffer.TryRemove(path, out _);
-                    string? url;
-                    urls.TryRemove(path, out url);
-                    if (!string.IsNullOrEmpty(url))
-                    {
-                        await JS.InvokeVoidAsync("revokeUrl", url);
-                    }
-                }
-                else
-                {
-                    buffer[path] = buffer[path] - 1;
+                    await JS.InvokeVoidAsync("revokeUrl", url);
                 }
             }
             Debug.WriteLine(urls.Count);
