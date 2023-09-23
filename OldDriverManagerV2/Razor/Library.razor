@@ -23,7 +23,7 @@
                     }
 
                     </MudGrid>
-                    <MudPagination Class="py-4" Count="page_num" SelectedChanged="OnPageChanged" />
+                    <MudPagination Selected="@current_page_index" Class="py-4" Count="@page_num" SelectedChanged="@OnPageChanged" />
                     break;
                 case 1:
                     <MudGrid>
@@ -104,6 +104,7 @@
 
     private async void OnPageChanged(int i)
     {
+        if (current_page_index == i) return;
         //await LocalImageLoader.RevokeAll();
         await JSRuntime.InvokeVoidAsync("scrollToTop");
         current_page_index = i;
