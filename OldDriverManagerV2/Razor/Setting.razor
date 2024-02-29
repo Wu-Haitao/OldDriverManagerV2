@@ -12,10 +12,11 @@
             </MudText>
             <MudSelect @bind-Value="sort_flag" Class="ml-4" Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter" Variant="Variant.Outlined">
                 <MudSelectItem Value="0">全部（依据影片码排序）</MudSelectItem>
-                <MudSelectItem Value="1">随机</MudSelectItem>
+                <MudSelectItem Value="1">全部（依据影片码排序，反向）</MudSelectItem>
+                <MudSelectItem Value="2">随机</MudSelectItem>
             </MudSelect>
         </div>
-        @if (sort_flag == 0)
+        @if (sort_flag < 2)
         {
             <div class="d-flex flex-row align-center mt-8">
                 <MudText Style="width:120px">
@@ -28,7 +29,7 @@
             <MudText Style="width:120px">
                 模糊图片
             </MudText>
-            <MudSwitch Class="ml-4" @bind-Checked="@img_blur_checked" ThumbIcon="@(img_blur_checked? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(img_blur_checked? Color.Success : Color.Error)" />
+            <MudSwitch Class="ml-4" @bind-Value="@img_blur_checked" ThumbIcon="@(img_blur_checked? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(img_blur_checked? Color.Success : Color.Error)" />
         </div>
 
         <MudButton Class="mt-8" FullWidth=true Variant="Variant.Filled" Color="Color.Primary" OnClick="@((e) => SaveSettings())">
@@ -36,6 +37,8 @@
         </MudButton>
     </MudContainer>
 </MudMainContent>
+
+@inject ISnackbar Snackbar
 
 @code {
     string? root_path;
@@ -46,7 +49,23 @@
 
     protected override void OnInitialized()
     {
+        Init();
+    }
+
+    private void Init()
+    {
+        InitSnackbar();
         ApplySettingsOnRender();
+    }
+
+    private void InitSnackbar()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        Snackbar.Configuration.ShowTransitionDuration = 200;
+        Snackbar.Configuration.HideTransitionDuration = 200;
+        Snackbar.Configuration.VisibleStateDuration = 800;
+        Snackbar.Configuration.SnackbarVariant = Variant.Text;
+        Snackbar.Configuration.PreventDuplicates = true;
     }
 
     private void ApplySettingsOnRender()
@@ -89,7 +108,7 @@
                 break;
         }
         Settings.Default.IsImgBlured = img_blur_checked;
-
         Settings.Default.Save();
+        Snackbar.Add("设置已保存", Severity.Success, config => { config.HideIcon = true; });
     }
 }

@@ -13,7 +13,12 @@
         <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.SpaceDashboard" OnClick="@((e) => OpenPage(Page.Library))">库</MudNavLink>
         <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Settings" OnClick="@((e) => OpenPage(Page.Setting))">设置</MudNavLink>
         <MudSpacer />
-        <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Info" OnClick="@((e) => OpenPage(Page.Credit))">关于</MudNavLink>
+        <MudNavLink IconColor="Color.Inherit" Icon="@Icons.Material.Filled.Info" OnClick="@((e) => OpenCreditDialog())">关于</MudNavLink>
+        <style>
+            .my-credit-class {
+                backdrop-filter: blur(10px);
+            }
+        </style>
     </MudDrawer>
     @switch (current_page)
     {
@@ -30,6 +35,8 @@
             break;
     }
 </MudLayout>
+
+@inject IDialogService DialogService
 
 @code {
     enum Page
@@ -54,10 +61,15 @@
         current_page = new_page;
     }
 
+    void OpenCreditDialog()
+    {
+        var options = new DialogOptions { NoHeader = true, ClassBackground = "my-credit-class" };
+        DialogService.Show<Credit>("Credit", options);
+    }
 
     MudTheme MyCustomTheme = new MudTheme()
     {
-        Palette = new Palette()
+        Palette = new PaletteLight()
         {
             Primary = Colors.Grey.Darken3,
             Secondary = Colors.Grey.Darken2,

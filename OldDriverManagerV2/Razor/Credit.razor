@@ -1,12 +1,24 @@
-﻿<MudMainContent>
-    <MudText Class="py-6" Align="Align.Center" Typo="Typo.h3">老司机管理器</MudText>
-    <MudText Class="py-4" Align="Align.Center">
-        这是一个使用 WPF 和 Blazor 的测试项目
-    </MudText>
-    <MudText Class="py-2" Align="Align.Center">
-        <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Small" /> 仓库地址：<MudLink Href="https://github.com/Wu-Haitao/OldDriverManagerV2">GitHub</MudLink>
-    </MudText>
-</MudMainContent>
+﻿<MudDialog>
+    <DialogContent>
+        <MudContainer>
+            <MudText Class="py-6" Align="Align.Center" Typo="Typo.h3">老司机管理器</MudText>
+            <MudText Class="py-4" Align="Align.Center">
+                这是一个使用 WPF 和 Blazor 的测试项目
+            </MudText>
+            <MudText Class="py-2" Align="Align.Center">
+                <MudIcon Icon="@Icons.Custom.Brands.GitHub" Size="Size.Small" /> 仓库地址：<MudLink Href="https://github.com/Wu-Haitao/OldDriverManagerV2">GitHub</MudLink>
+            </MudText>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Ok">好的</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+    private void Ok()
+    {
+        if (MudDialog != null) MudDialog.Close(DialogResult.Ok(true));
+    }
 }

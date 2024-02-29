@@ -11,24 +11,26 @@ namespace OldDriverManagerV2.Data
         public string seller { get; set; }
         public List<string> casts { get; set; }
         public List<string> tags { get; set; }
-        public string file { get; set; }
+        public List<string> files { get; set; }
         public string cover { get; set; }
         public string fanart { get; set; }
         public string website { get; set; }
         public string nfo { get; set; }
-        public Movie(string title, string num, string seller, List<string> casts, List<string> tags, string file, string cover, string fanart, string website, string nfo)
+
+        public Movie(string title, string num, string seller, List<string> casts, List<string> tags, List<string> file, string cover, string fanart, string website, string nfo)
         {
             this.title = title ?? throw new ArgumentNullException(nameof(title));
             this.num = num ?? throw new ArgumentNullException(nameof(num));
             this.seller = seller ?? throw new ArgumentNullException(nameof(seller));
             this.casts = casts ?? throw new ArgumentNullException(nameof(casts));
             this.tags = tags ?? throw new ArgumentNullException(nameof(tags));
-            this.file = file ?? throw new ArgumentNullException(nameof(file));
+            this.files = file ?? throw new ArgumentNullException(nameof(file));
             this.cover = cover ?? throw new ArgumentNullException(nameof(cover));
             this.fanart = fanart ?? throw new ArgumentNullException(nameof(fanart));
             this.website = website ?? throw new ArgumentNullException(nameof(website));
             this.nfo = nfo ?? throw new ArgumentNullException(nameof(nfo));
         }
+
         public bool ContainsKeywords(List<string> keywords)
         {
             foreach (string keyword in keywords)

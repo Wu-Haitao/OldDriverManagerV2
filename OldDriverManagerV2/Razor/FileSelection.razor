@@ -1,0 +1,74 @@
+﻿<MudDialog>
+    <DialogContent>
+        <div class="d-flex flex-column py-1">
+            @if (files != null)
+            {
+                @for (int _i = 0; _i < files.Count; _i++)
+                {
+                    int _index = _i;
+                    @if(isToPlay)
+                    {
+                        <MudButton OnClick="@((e) => OnPlayClicked(files[_index]))">@files[_index]</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton OnClick="@((e) => OnOpenPathClicked(files[_index]))">@files[_index]</MudButton>
+
+                    }
+                }
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Close">完成</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@using OldDriverManagerV2.Util
+@inject ISnackbar Snackbar
+
+@code {
+    [CascadingParameter] MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public List<string>? files { get; set; }
+    [Parameter] public bool isToPlay { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Init();
+    }
+
+    private void Init()
+    {
+        InitSnackbar();
+    }
+
+    private void InitSnackbar()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomCenter;
+        Snackbar.Configuration.ShowTransitionDuration = 200;
+        Snackbar.Configuration.HideTransitionDuration = 200;
+        Snackbar.Configuration.VisibleStateDuration = 800;
+        Snackbar.Configuration.SnackbarVariant = Variant.Text;
+        Snackbar.Configuration.PreventDuplicates = true;
+    }
+
+    // 点击播放
+    private void OnPlayClicked(string path)
+    {
+        bool flag = MovieListHandler.PlayMovie(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    // 点击打开文件路径
+    private void OnOpenPathClicked(string path)
+    {
+        bool flag = MovieListHandler.OpenPath(path);
+        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+    }
+
+    void Close()
+    {
+        if (MudDialog != null) MudDialog.Close(DialogResult.Ok(true));
+    }
+}

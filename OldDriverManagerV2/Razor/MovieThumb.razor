@@ -8,12 +8,17 @@
             </MudCardContent>
             <MudCardActions>
                 <MudTooltip Text="播放">
-                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie.file))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie))" />
                 </MudTooltip>
                 <MudSpacer />
                 <MudTooltip Text="详情">
                     <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" OnClick="@((e)=>OnInfoClicked(movie))" />
                 </MudTooltip>
+                <style>
+                    .my-dialog-class {
+                        backdrop-filter: blur(10px);
+                    }
+                </style>
             </MudCardActions>
         }
     </MudCard>
@@ -21,15 +26,17 @@
 
 @using OldDriverManagerV2.Util
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @implements IAsyncDisposable
 
 @code {
     private OldDriverManagerV2.Data.Movie? _movie;
+    private string cover_img_url = "";
     [Parameter]
     public OldDriverManagerV2.Data.Movie? movie { set; get; }
     [Parameter]
     public Action<OldDriverManagerV2.Data.Movie?>? OnInfoClicked { set; get; }
-    private string cover_img_url = "";
+    
 
     protected override async Task OnParametersSetAsync()
     {
@@ -60,10 +67,22 @@
         Snackbar.Configuration.PreventDuplicates = true;
     }
 
-    private void OnPlayClicked(string path)
+    // 点击播放
+    private void OnPlayClicked(OldDriverManagerV2.Data.Movie movieToBePlayed)
     {
-        bool flag = MovieListHandler.PlayMovie(path);
-        if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+        if (movieToBePlayed.files.Count > 1)
+        {
+            var options = new DialogOptions { ClassBackground = "my-dialog-class" };
+            var parameters = new DialogParameters<FileSelection>();
+            parameters.Add(x => x.files, movieToBePlayed.files);
+            parameters.Add(x => x.isToPlay, true);
+            DialogService.Show<FileSelection>("文件选择", parameters, options);
+        }
+        else
+        {
+            bool flag = MovieListHandler.PlayMovie(movieToBePlayed.files[0]);
+            if (!flag) Snackbar.Add("文件不存在", Severity.Error, config => { config.HideIcon = true; });
+        }
     }
 
     private async Task LoadLocalImage(OldDriverManagerV2.Data.Movie? movie_load)
