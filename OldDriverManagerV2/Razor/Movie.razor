@@ -5,8 +5,8 @@
             <MudCarousel Class="mud-width-full rounded" TData="object" Style="height:400px" ShowArrows=true ShowBullets=false>
             @foreach (string img_url in img_urls)
             {
-                <MudCarouselItem Transition="Transition.Slide" Color="@Color.Primary">
-                        <MudImage Fluid="true" Src="@img_url" ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Style="@(Settings.Default.IsImgBlured? "filter:blur(12px);width:100%; height:100%;":"width:100%; height:100%;")" />
+                <MudCarouselItem Transition="Transition.Fade">
+                        <MudImage Src="@img_url" ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Style="@(Settings.Default.IsImgBlured? "filter:blur(12px); width:100%; height:100%;":"width:100%; height:100%;")" />
                 </MudCarouselItem>
             }
         </MudCarousel>
@@ -28,7 +28,7 @@
                 <MudDivider Class="my-4" />
                 @foreach (string _cast in movie.casts)
                 {
-                    <MudChip Variant="Variant.Text" Color="Color.Primary" OnClick="@((e)=>OnCopyClicked(_cast))">@_cast</MudChip>
+                    <MudChip Variant="Variant.Text" OnClick="@((e)=>OnCopyClicked(_cast))">@_cast</MudChip>
                 }
             }
             @if (movie.tags.Count > 0)
@@ -36,13 +36,13 @@
                 <MudDivider Class="my-4" />
                 @foreach (string _tag in movie.tags)
                 {
-                    <MudChip Variant="Variant.Text" Color="Color.Primary" OnClick="@((e)=>OnCopyClicked(_tag))">@_tag</MudChip>
+                    <MudChip Variant="Variant.Text" OnClick="@((e)=>OnCopyClicked(_tag))">@_tag</MudChip>
                 }
             }
             <MudDivider Class="my-4" />
-            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie))">播放</MudButton>
-            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.DriveFileMove" OnClick="@((e)=>OnOpenPathClicked(movie))">打开文件所在路径</MudButton>
-            <MudButton Class="mb-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EditNote" OnClick="@((e)=>OnOpenNFOClicked(movie.nfo))">打开属性文件所在路径</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="@((e)=>OnPlayClicked(movie))">播放</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DriveFileMove" OnClick="@((e)=>OnOpenPathClicked(movie))">打开文件所在路径</MudButton>
+            <MudButton Class="mb-2" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.EditNote" OnClick="@((e)=>OnOpenNFOClicked(movie.nfo))">打开属性文件所在路径</MudButton>
             <style>
                 .my-dialog-class {
                     backdrop-filter: blur(10px);

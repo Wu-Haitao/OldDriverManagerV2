@@ -31,8 +31,14 @@
             </MudText>
             <MudSwitch Class="ml-4" @bind-Value="@img_blur_checked" ThumbIcon="@(img_blur_checked? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(img_blur_checked? Color.Success : Color.Error)" />
         </div>
+        <div class="d-flex flex-row align-center mt-8">
+            <MudText Style="width:120px">
+                黑暗模式
+            </MudText>
+            <MudSwitch Class="ml-4" @bind-Value="@dark_mode_checked" ThumbIcon="@(dark_mode_checked? Icons.Material.Filled.Done : Icons.Material.Filled.Close)" ThumbIconColor="@(dark_mode_checked? Color.Success : Color.Error)" />
+        </div>
 
-        <MudButton Class="mt-8" FullWidth=true Variant="Variant.Filled" Color="Color.Primary" OnClick="@((e) => SaveSettings())">
+        <MudButton Class="mt-8" FullWidth=true Variant="Variant.Filled" OnClick="@((e) => SaveSettings())">
             保存
         </MudButton>
     </MudContainer>
@@ -46,6 +52,7 @@
     int num_items;
     string[] num_items_labels = new string[] { "20", "50", "100" };
     bool img_blur_checked = false;
+    bool dark_mode_checked = false;
 
     protected override void OnInitialized()
     {
@@ -87,6 +94,7 @@
                 break;
         }
         img_blur_checked = Settings.Default.IsImgBlured;
+        dark_mode_checked = Settings.Default.DarkMode;
     }
 
     private void SaveSettings()
@@ -108,6 +116,7 @@
                 break;
         }
         Settings.Default.IsImgBlured = img_blur_checked;
+        Settings.Default.DarkMode = dark_mode_checked;
         Settings.Default.Save();
         Snackbar.Add("设置已保存", Severity.Success, config => { config.HideIcon = true; });
     }
