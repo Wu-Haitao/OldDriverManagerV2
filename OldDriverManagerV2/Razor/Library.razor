@@ -9,6 +9,10 @@
                 }
 
             </MudContainer>
+            @if (is_loading)
+            {
+                <MudImage Src="img/Loading.gif" Width="80" Height="80" Class="my-16" Style="opacity:0.5"/>
+            }
             @switch (Settings.Default.SortFlag)
             {
                 case 0:
@@ -71,6 +75,7 @@
 @inject IDialogService DialogService
 
 @code {
+    private bool is_loading = true;
     private bool show_movie_info = false;
     private int page_num = 1;
     private int current_page_index = 1;
@@ -143,13 +148,16 @@
     // 初始化
     private async Task Init()
     {
+        is_loading = true;
         System.Diagnostics.Debug.WriteLine("Library Initialization");
         InitSnackbar();
         await MovieListHandler.GetAllMovies();
         await MovieListHandler.FilterMovies("");
         await MovieListHandler.SortMovies();
+        //Thread.Sleep(1000);
         LocalImageLoader.Init(JSRuntime);
         RefreshPage();
+        is_loading = false;
     }
 
     // 刷新页面
