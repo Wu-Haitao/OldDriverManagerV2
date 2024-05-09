@@ -163,6 +163,11 @@ namespace OldDriverManagerV2.Util
                     foreach (string path in paths) imgPaths.Add(path);
                 }
             }
+            else
+            {
+                string path = movie.cover;
+                imgPaths.Add(path);
+            }
             return imgPaths;
         }
 
